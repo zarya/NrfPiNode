@@ -5,6 +5,8 @@
 #include <ctime>
 #include <stdio.h>
 #include "PracticalSocket.h"
+#include "main-controller.h"
+
 /**
  * g++ -L/usr/lib main.cc -I/usr/include -o main -lrrd
  **/
@@ -12,9 +14,6 @@ using namespace std;
 
 RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CSN
 RF24Network network(radio);
-
-// Address of our node
-const uint16_t this_node = 0;
 
 struct payload_t
 {
@@ -43,7 +42,7 @@ int main(int argc, char** argv)
 	radio.setDataRate(RF24_250KBPS);
 	radio.setRetries(7,7);
 	delay(5);
-	network.begin(/*channel*/ 80, /*node address*/ this_node);
+	network.begin(CHANNEL, NODEID);
 	while(1)
 	{
 		  network.update();
@@ -72,26 +71,6 @@ int main(int argc, char** argv)
 		    	printf(dataupload);
 		    	send_payload(dataupload);
 		    }
-/*
-		    if (header.from_node == 1) {
-		    	    payload_weather_t payload;
-		    	    network.read(header,&payload,sizeof(payload));
-			    printf("N:%.2f:%.2f:%lu\n", payload.temperature, payload.humidity, payload.lux);    
-		    }
-
-		    if (header.from_node == 2) {
-		    	    payload_power_t payload;
-		    	    network.read(header,&payload,sizeof(payload));
-			    printf("N:%.2f:%.2f\n", payload.power, payload.current);    
-		    }
-		    //time_t timer;
-    		    //char timeBuffer[25];
-    		    //struct tm* tm_info;
-    		    //time(&timer);
-    		    //tm_info = localtime(&timer);
-		    //strftime(timeBuffer, 25, "%Y/%m/%d %H:%M:%S", tm_info);
-		    //fprintf(pFile, "%s;%lu;%.2f;%.2f\n", timeBuffer,payload.nodeId, payload.data1, payload.data2);    
-*/
 		  }
 		 delay(100);
 	}
