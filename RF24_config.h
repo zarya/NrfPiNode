@@ -20,6 +20,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <string>
+#include "config.h"
 
 #define pgm_read_word(p) (*(p))
 #define pgm_read_byte(p) (*(p))

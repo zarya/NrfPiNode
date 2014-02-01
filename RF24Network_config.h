@@ -11,6 +11,7 @@
 #define __RF24_CONFIG_H__
 
 #include <stddef.h>
+#include "config.h"
 
 // Stuff that is normally provided by Arduino
 #ifndef ARDUINO
