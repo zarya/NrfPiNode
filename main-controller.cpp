@@ -4,8 +4,8 @@
 #include "RF24Network.h"
 #include <ctime>
 #include <stdio.h>
+#include "config.h"
 #include "PracticalSocket.h"
-#include "main-controller.h"
 
 /**
  * g++ -L/usr/lib main.cc -I/usr/include -o main -lrrd

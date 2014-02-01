@@ -20,8 +20,6 @@
 #define _BV(x) (1<<(x))
 #endif
 
-//#undef SERIAL_DEBUG
-#define SERIAL_DEBUG
 #ifdef SERIAL_DEBUG
 #define IF_SERIAL_DEBUG(x) ({x;})
 #else
