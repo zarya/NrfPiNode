@@ -11,7 +11,6 @@
 #define __RF24_CONFIG_H__
 
 #include <stddef.h>
-#include "config.h"
 
 // Stuff that is normally provided by Arduino
 #ifndef ARDUINO
@@ -21,6 +20,8 @@
 #define _BV(x) (1<<(x))
 #endif
 
+//#undef SERIAL_DEBUG
+#define SERIAL_DEBUG
 #ifdef SERIAL_DEBUG
 #define IF_SERIAL_DEBUG(x) ({x;})
 #else
