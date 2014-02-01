@@ -1,6 +1,6 @@
-# NrfNodeController 
+# NrfPiNode 
 
-NrfNodeController that makes use of the RF24Network lib
+NrfPiNode that makes use of the RF24Network lib and runs on a raspberry pi
 
 The lib is build against the RF24 lib using the GPIO way
 
