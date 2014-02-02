@@ -30,7 +30,7 @@ CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s
 
 # make all
 # reinstall the library after each recompilation
-all: librf24 install-rf24 librf24network install-rf24n
+all: librf24 install-rf24 librf24network install-rf24n main-controller
 
 # Make the library
 librf24network: RF24Network.o
