@@ -39,6 +39,13 @@ librf24network: RF24Network.o
 main-controller: main-controller.cpp
 	g++ ${CCFLAGS} -Wall -lrf24 -lrf24network $^ PracticalSocket.cpp -o $@
 
+tx-test: tx-test.cpp
+	g++ ${CCFLAGS} -Wall -lrf24 -lrf24network $^ PracticalSocket.cpp -o $@
+
+ota-example: ota-example.cpp
+	g++ ${CCFLAGS} -Wall -lrf24 -lrf24network $^ PracticalSocket.cpp -o $@
+
+
 librf24: RF24.o gpio.o spi.o compatibility.o
 	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME_RF24} compatibility.o gpio.o spi.o RF24.o
 
