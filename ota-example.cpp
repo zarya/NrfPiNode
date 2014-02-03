@@ -38,7 +38,10 @@ int main(int argc, char** argv)
 	char a_char2[3];
 	printf("Enter config value:");
 	cin >> a_char2;
-	payload_config_t payload = {atoi(a_char),atoi(a_char2),0};
+	char a_char3[3];
+	printf("Enter settings value: ");
+	cin >> a_char3;
+	payload_config_t payload = {atoi(a_char),atoi(a_char2),atoi(a_char3)};
 	
 
 	RF24NetworkHeader header(5, 'C');
