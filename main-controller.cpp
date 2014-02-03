@@ -27,7 +27,7 @@ struct payload_t
 void send_payload(char *payload)
 {
   try {
-    TCPSocket sock("10.38.20.1", 2003);
+    TCPSocket sock(GRAPHITE_HOST, GRAPHITE_PORT);
     sock.send(payload, strlen(payload));
 
   } catch(SocketException &e) {
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 		    	send_payload(dataupload);
 		    }
 		  }
-		 delay(100);
+		 delay(5);
 	}
 
 	return 0;

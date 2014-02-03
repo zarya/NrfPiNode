@@ -1,3 +1,6 @@
 #define NODEID 0
 
 #define CHANNEL 80
+
+#define GRAPHITE_HOST "10.38.20.1"
+#define GRAPHITE_PORT 2003
