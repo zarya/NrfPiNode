@@ -55,6 +55,9 @@ int main(int argc, char** argv)
 		    network.read(header,&payload,sizeof(payload));
 		    char dataupload[] ="";
 	 	    int16_t _value = (payload.value_high << 4) | payload.value_low;
+		    if (header.type == 'Q') {
+			printf("Received ping from %i",header.from_node)
+		    }
 		    if (payload.type == 'P' or payload.type == 'W' or payload.type == 'G') {
 	 	    	value = (float)_value;
 		    } else {
