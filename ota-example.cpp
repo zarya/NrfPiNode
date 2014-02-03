@@ -34,10 +34,10 @@ int main(int argc, char** argv)
 	char _byte[3];
 	printf("Enter byte number:");
 	cin >> _byte;
-	char a_char2[3];
+	char _value[3];
 	printf("Enter config value:");
-	cin >> a_char2;
-	payload_config_t payload = {atoi(a_char),atoi(a_char2)};
+	cin >> _value;
+	payload_config_t payload = {atoi(_byte),atoi(_value)};
 	
 
 	RF24NetworkHeader header(5, 'C');
