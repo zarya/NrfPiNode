@@ -20,7 +20,6 @@ struct payload_config_t
 {
   uint8_t pos;
   uint8_t data;
-  uint8_t options;
 };
 
 int main(int argc, char** argv) 
@@ -32,16 +31,13 @@ int main(int argc, char** argv)
 	network.begin(CHANNEL, NODEID);
 	network.update();
 
-	char a_char[3];
+	char _byte[3];
 	printf("Enter byte number:");
-	cin >> a_char;
+	cin >> _byte;
 	char a_char2[3];
 	printf("Enter config value:");
 	cin >> a_char2;
-	char a_char3[3];
-	printf("Enter settings value: ");
-	cin >> a_char3;
-	payload_config_t payload = {atoi(a_char),atoi(a_char2),atoi(a_char3)};
+	payload_config_t payload = {atoi(a_char),atoi(a_char2)};
 	
 
 	RF24NetworkHeader header(5, 'C');
