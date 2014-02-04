@@ -53,6 +53,7 @@ void radio_setup() {
 char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devide)
 {
     char* dataupload;
+    dataupload = "";
     float value;
     int16_t _value = (payload.value_high << 4) | payload.value_low;
     if (devide)
@@ -67,29 +68,22 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
         sprintf(dataupload,"sensor.net.%i.%c.%i %.2f -1\n\r",
             header.from_node,payload.type,payload.sensor,value);
     }
-    if (header.from_node != 0) {
-        printf(dataupload);
-        send_payload(dataupload);
-        return dataupload;
-    }
-    return (char*)"";
+    printf(dataupload);
+    printf("\n");
+    return dataupload;
 }
 
 void handle_radio_rx(fd_set _working_set, int _max_sd)
 {
     int y;
-    for (y=0; y <= _max_sd; ++y)
-    {
-        if (FD_ISSET(y, &_working_set))
-            send(y, "radio\n", 7, 0);
-    }
     while ( network.available() )
+    {
         // If so, grab it and print it out
         RF24NetworkHeader header;
         network.peek(header);
         payload_t payload;
         network.read(header,&payload,sizeof(payload));
-        char dataupload[] ="";
+        char* client_payload;
         int16_t _value;
         _value = (payload.value_high << 4) | payload.value_low;
         switch ( header.type ) {
@@ -100,42 +94,53 @@ void handle_radio_rx(fd_set _working_set, int _max_sd)
         };
         switch ( payload.type ) {
             case 'T': //Process temperature
-                dataupload = handle_sensor_metric(header,payload,1);
+                client_payload = handle_sensor_metric(header,payload,1);
                 break;
             case 'P': //Process Pulse
-                dataupload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload,0);
                 break;
             case 'W': //Process Water
-                dataupload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload,0);
                 break;
             case 'G': //Precess Gass
-                dataupload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload,0);
                 break;
             default:
                 printf("Unknown payload type\n");
+                return;
                 break;
         };
+        //Send packet from nodes
+        if (header.from_node != 0) {
+            printf(client_payload);
+            send_payload(client_payload);
+            for (y=0; y <= _max_sd; ++y)
+            {
+                if (FD_ISSET(y, &_working_set))
+                    send(y, client_payload, sizeof(client_payload), 0);
+            }
+        }
     }
 }
 
 //Handle the radio input
-void handle_radio(struct fd_set _working_set, int _max_sd) {
+void handle_radio(fd_set _working_set, int _max_sd) {
     printf("func: handle_radio(fd,%i): ",_max_sd);
     network.update();
     handle_radio_rx(_working_set,_max_sd);
     printf("Done\n");
 }
 
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
    int    i, len, rc, on = 1;
    int    listen_sd, max_sd, new_sd;
    int    desc_ready, end_server = FALSE;
    int    close_conn;
    char   buffer[80];
-   struct sockaddr_in   addr;
-   struct timeval       timeout;
-   struct fd_set        master_set, working_set;
+   sockaddr_in   addr;
+   timeval       timeout;
+   fd_set        master_set, working_set;
 
    //Setup the radio
    radio_setup();

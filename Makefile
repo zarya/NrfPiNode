@@ -26,7 +26,8 @@ LIB_RF24=librf24
 LIBNAME_RF24=$(LIB_RF24).so.1.0
 
 # The recommended compiler flags for the Raspberry Pi
-CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s
+#CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -g
+CCFLAGS=-mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -g
 
 # make all
 # reinstall the library after each recompilation
