@@ -36,6 +36,9 @@ all: librf24 install-rf24 librf24network install-rf24n main-controller
 librf24network: RF24Network.o
 	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME_RFN} $^ -lrf24
 
+NrfPiNode: NrfPiNode.cpp
+	g++ ${CCFLAGS} -Wall -lrf24 -lrf24network $^ PracticalSocket.cpp -o $@
+
 main-controller: main-controller.cpp
 	g++ ${CCFLAGS} -Wall -lrf24 -lrf24network $^ PracticalSocket.cpp -o $@
 
