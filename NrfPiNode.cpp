@@ -7,10 +7,36 @@
 #include <errno.h>
 #include <strings.h>
 
+#include <ctime>
+#include <stdio.h>
+#include "config.h"
+#include "PracticalSocket.h"
+
+#include "RF24.h"
+#include "RF24Network.h"
+
+#include "NrfPiNode.h"
+
+using namespace std;
+
+RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CSN
+RF24Network network(radio);
+
 #define SERVER_PORT  12345
 
 #define TRUE             1
 #define FALSE            0
+
+void send_payload(char *payload)
+{
+  try {
+    TCPSocket sock(GRAPHITE_HOST, GRAPHITE_PORT);
+    sock.send(payload, strlen(payload));
+
+  } catch(SocketException &e) {
+    cerr << e.what() << endl;
+  }
+}
 
 void radio_setup() {
 /*
