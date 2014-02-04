@@ -17,7 +17,7 @@ extern "C" {
 #include "PracticalSocket.h"
 
 #include "RF24.h"
-//#include "RF24Network.h"
+#include "RF24Network.h"
 
 #include "NrfPiNode.h"
 
@@ -75,7 +75,7 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
     return (char*)"";
 }
 
-void handle_radio_rx(struct fd_set _working_set, int _max_sd)
+void handle_radio_rx(fd_set _working_set, int _max_sd)
 {
     int y;
     for (y=0; y <= _max_sd; ++y)
@@ -114,8 +114,8 @@ void handle_radio_rx(struct fd_set _working_set, int _max_sd)
             default:
                 printf("Unknown payload type\n");
                 break;
-        }
-    };
+        };
+    }
 }
 
 //Handle the radio input
