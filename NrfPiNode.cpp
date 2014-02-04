@@ -52,8 +52,7 @@ void radio_setup() {
 
 char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devide)
 {
-    char* dataupload;
-    dataupload = "";
+    char* dataupload = new char[255];
     float value;
     int16_t _value = (payload.value_high << 4) | payload.value_low;
     if (devide)
@@ -73,7 +72,7 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
     return dataupload;
 }
 
-void handle_radio_rx(fd_set _working_set, int _max_sd)
+void handle_radio_rx(fd_set _master_set, int _max_sd)
 {
     int y;
     while ( network.available() )
@@ -83,7 +82,7 @@ void handle_radio_rx(fd_set _working_set, int _max_sd)
         network.peek(header);
         payload_t payload;
         network.read(header,&payload,sizeof(payload));
-        char* client_payload;
+        char* client_payload = new char[255];
         int16_t _value;
         _value = (payload.value_high << 4) | payload.value_low;
         switch ( header.type ) {
@@ -114,21 +113,15 @@ void handle_radio_rx(fd_set _working_set, int _max_sd)
         if (header.from_node != 0) {
             printf(client_payload);
             send_payload(client_payload);
-            for (y=0; y <= _max_sd; ++y)
-            {
-                if (FD_ISSET(y, &_working_set))
-                    send(y, client_payload, sizeof(client_payload), 0);
-            }
+            //Hier moet het in de queue 
         }
     }
 }
 
 //Handle the radio input
 void handle_radio(fd_set _working_set, int _max_sd) {
-    printf("func: handle_radio(fd,%i): ",_max_sd);
     network.update();
     handle_radio_rx(_working_set,_max_sd);
-    printf("Done\n");
 }
 
 int main (int argc, char *argv[])
@@ -144,6 +137,9 @@ int main (int argc, char *argv[])
 
    //Setup the radio
    radio_setup();
+
+   //Setup Queues
+   init_queue(0); //TX queue
 
    /*************************************************************/
    /* Create an AF_INET stream socket to receive incoming       */
@@ -219,14 +215,13 @@ int main (int argc, char *argv[])
    /* Initialize the timeval struct to 3 minutes.  If no        */
    /* activity after 3 minutes this program will end.           */
    /*************************************************************/
-   timeout.tv_sec  = 2;
+   timeout.tv_sec  = 1;
    timeout.tv_usec = 0;
 
    do
    {
       memcpy(&working_set, &master_set, sizeof(master_set));
 
-      printf("Waiting on select()...\n");
       rc = select(max_sd + 1, &working_set, NULL, NULL, &timeout);
 
       if (rc < 0)
@@ -237,7 +232,8 @@ int main (int argc, char *argv[])
 
       if (rc == 0)
       {
-         handle_radio(master_set, max_sd); 
+         handle_radio(master_set, max_sd);
+         //Send the queued data to the sockets 
       }
 
       desc_ready = rc;
@@ -399,3 +395,4 @@ int main (int argc, char *argv[])
          close(i);
    }
 }
+
