@@ -1,3 +1,7 @@
+#include <cstdlib>
+#include <iostream>
+#include <ctime>
+extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -6,14 +10,14 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <strings.h>
-
-#include <ctime>
 #include <stdio.h>
+}
+
 #include "config.h"
 #include "PracticalSocket.h"
 
 #include "RF24.h"
-#include "RF24Network.h"
+//#include "RF24Network.h"
 
 #include "NrfPiNode.h"
 
@@ -39,18 +43,17 @@ void send_payload(char *payload)
 }
 
 void radio_setup() {
-/*
     radio.begin();
     radio.setDataRate(RF24_250KBPS);
     radio.setRetries(7,7);
     delay(5);
     network.begin(CHANNEL, NODEID);
-*/
 }
 
-char* handle_sensor_metric(RF24NetworHeader header, payload_t payload, int devide)
+char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devide)
 {
-    char dataupload[] ="";
+    char* dataupload;
+    float value;
     int16_t _value = (payload.value_high << 4) | payload.value_low;
     if (devide)
         value = (float)_value/100;
@@ -69,7 +72,7 @@ char* handle_sensor_metric(RF24NetworHeader header, payload_t payload, int devid
         send_payload(dataupload);
         return dataupload;
     }
-    return "";
+    return (char*)"";
 }
 
 void handle_radio_rx(struct fd_set _working_set, int _max_sd)
@@ -87,13 +90,14 @@ void handle_radio_rx(struct fd_set _working_set, int _max_sd)
         payload_t payload;
         network.read(header,&payload,sizeof(payload));
         char dataupload[] ="";
-        int16_t _value = (payload.value_high << 4) | payload.value_low;
+        int16_t _value;
+        _value = (payload.value_high << 4) | payload.value_low;
         switch ( header.type ) {
             case 'Q':
                 //Handle ping reply
                 printf("Received ping from %i",header.from_node);
                 break;
-        }
+        };
         switch ( payload.type ) {
             case 'T': //Process temperature
                 dataupload = handle_sensor_metric(header,payload,1);
@@ -111,13 +115,13 @@ void handle_radio_rx(struct fd_set _working_set, int _max_sd)
                 printf("Unknown payload type\n");
                 break;
         }
-    }
+    };
 }
 
 //Handle the radio input
 void handle_radio(struct fd_set _working_set, int _max_sd) {
     printf("func: handle_radio(fd,%i): ",_max_sd);
-    //network.update();
+    network.update();
     handle_radio_rx(_working_set,_max_sd);
     printf("Done\n");
 }
