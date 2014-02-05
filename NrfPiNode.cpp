@@ -134,10 +134,9 @@ void handle_radio(fd_set _working_set, int _max_sd) {
                 if (FD_ISSET(y, &_working_set)) {
                     signal(SIGPIPE, SIG_IGN);
                     if (is_valid_fd(y))
-                        send(y, client_payload, 255, 0);
+                        send(y, client_payload, strlen(client_payload), 0);
                 }
             }
-            printf(client_payload);
             send_payload(client_payload);
         }
         free(client_payload);
