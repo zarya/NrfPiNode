@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ctime>
 extern "C" {
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -67,13 +68,29 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
         sprintf(dataupload,"sensor.net.%i.%c.%i %.2f -1\n\r",
             header.from_node,payload.type,payload.sensor,value);
     }
-    printf(dataupload);
-    printf("\n");
     return dataupload;
 }
-
-void handle_radio_rx(fd_set _master_set, int _max_sd)
+//Handle radio output
+int handle_radio_tx(uint16_t nodeid, char header_type, payload_t payload)
 {
+    RF24NetworkHeader header(nodeid, header_type);
+    if (network.write(header,&payload,sizeof(payload))) {
+        printf("Command send to node: %i\n",nodeid);
+        return 1;
+    } else {
+        printf("Error sending to node: %i\n",nodeid);
+        return 0;
+    }
+}
+
+int is_valid_fd(int fd)
+{
+    return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
+}
+
+//Handle the radio input
+void handle_radio(fd_set _working_set, int _max_sd) {
+    network.update();
     int y;
     while ( network.available() )
     {
@@ -112,16 +129,26 @@ void handle_radio_rx(fd_set _master_set, int _max_sd)
         //Send packet from nodes
         if (header.from_node != 0) {
             printf(client_payload);
+            for (y=0; y <= _max_sd; ++y)
+            {
+                if (FD_ISSET(y, &_working_set)) {
+                    signal(SIGPIPE, SIG_IGN);
+                    if (is_valid_fd(y))
+                        send(y, client_payload, 255, 0);
+                }
+            }
+            printf(client_payload);
             send_payload(client_payload);
-            //Hier moet het in de queue 
         }
+        free(client_payload);
     }
 }
 
-//Handle the radio input
-void handle_radio(fd_set _working_set, int _max_sd) {
-    network.update();
-    handle_radio_rx(_working_set,_max_sd);
+//Handle incomming packet from tcp socket
+void handle_tcp_rx(char buffer[80])
+{
+    printf(buffer);
+    //handle_radio_tx(uint16_t nodeid, char header_type, payload_t payload)
 }
 
 int main (int argc, char *argv[])
@@ -137,9 +164,6 @@ int main (int argc, char *argv[])
 
    //Setup the radio
    radio_setup();
-
-   //Setup Queues
-   init_queue(0); //TX queue
 
    /*************************************************************/
    /* Create an AF_INET stream socket to receive incoming       */
@@ -215,7 +239,7 @@ int main (int argc, char *argv[])
    /* Initialize the timeval struct to 3 minutes.  If no        */
    /* activity after 3 minutes this program will end.           */
    /*************************************************************/
-   timeout.tv_sec  = 1;
+   timeout.tv_sec  = 0;
    timeout.tv_usec = 0;
 
    do
@@ -348,16 +372,19 @@ int main (int argc, char *argv[])
                   len = rc;
                   printf("  %d bytes received\n", len);
 
+                  //Doe eens naar de nrf sturen
+                  handle_tcp_rx(buffer);
                   /**********************************************/
                   /* Echo the data back to the client           */
                   /**********************************************/
-                  rc = send(i, buffer, len, 0);
+                  /*rc = send(i, buffer, len, 0);
                   if (rc < 0)
                   {
                      perror("  send() failed");
                      close_conn = TRUE;
                      break;
-                  }
+                  }*/
+                  break;
 
                } while (TRUE);
 
