@@ -71,7 +71,7 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
     return dataupload;
 }
 //Handle radio output
-int handle_radio_tx(uint16_t nodeid, char header_type, payload_t payload)
+int handle_radio_tx(uint16_t nodeid, char header_type, char* payload)
 {
     RF24NetworkHeader header(nodeid, header_type);
     if (network.write(header,&payload,sizeof(payload))) {
@@ -148,6 +148,22 @@ void handle_tcp_rx(char buffer[80])
     memcpy(&input_data, buffer, sizeof input_data);
     printf("Sending message to\n\tNodeID: %i\n",input_data.nodeid);
     printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
+
+    payload_t payload;
+
+    switch ( input_data.header_type )
+    {
+        case 'P':
+            handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)1);
+            printf("Sending ping to %i\n",input_data.nodeid);
+            break;
+        default:
+            printf("Unknown header type\n");
+            break;
+    }
+    //payload_t input_payload;
+    //memcpy(&input_payload, input_data.payload, sizeof(input_data.payload));
+    
     //handle_radio_tx(uint16_t nodeid, char header_type, payload_t payload)
 }
 
