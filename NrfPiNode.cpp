@@ -100,8 +100,6 @@ void handle_radio(fd_set _working_set, int _max_sd) {
         payload_t payload;
         network.read(header,&payload,sizeof(payload));
         char* client_payload = new char[255];
-        int16_t _value;
-        _value = (payload.value_high << 4) | payload.value_low;
         switch ( header.type ) {
             case 'Q':
                 //Handle ping reply
@@ -146,7 +144,10 @@ void handle_radio(fd_set _working_set, int _max_sd) {
 //Handle incomming packet from tcp socket
 void handle_tcp_rx(char buffer[80])
 {
-    printf(buffer);
+    input_msg input_data; 
+    memcpy(&input_data, buffer, sizeof input_data);
+    printf("Sending message to\n\tNodeID: %i\n",input_data.nodeid);
+    printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
     //handle_radio_tx(uint16_t nodeid, char header_type, payload_t payload)
 }
 
@@ -161,13 +162,8 @@ int main (int argc, char *argv[])
    timeval       timeout;
    fd_set        master_set, working_set;
 
-   //Setup the radio
    radio_setup();
 
-   /*************************************************************/
-   /* Create an AF_INET stream socket to receive incoming       */
-   /* connections on                                            */
-   /*************************************************************/
    listen_sd = socket(AF_INET, SOCK_STREAM, 0);
    if (listen_sd < 0)
    {
@@ -187,11 +183,6 @@ int main (int argc, char *argv[])
       exit(-1);
    }
 
-   /*************************************************************/
-   /* Set socket to be non-blocking.  All of the sockets for    */
-   /* the incoming connections will also be non-blocking since  */
-   /* they will inherit that state from the listening socket.   */
-   /*************************************************************/
    rc = ioctl(listen_sd, FIONBIO, (char *)&on);
    if (rc < 0)
    {
@@ -200,9 +191,6 @@ int main (int argc, char *argv[])
       exit(-1);
    }
 
-   /*************************************************************/
-   /* Bind the socket                                           */
-   /*************************************************************/
    memset(&addr, 0, sizeof(addr));
    addr.sin_family      = AF_INET;
    addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -369,8 +357,11 @@ int main (int argc, char *argv[])
                   /* Data was recevied                          */
                   /**********************************************/
                   len = rc;
+                  printf("Buffer: ");
+                  printf(buffer);
+                  printf("\n");
                   printf("  %d bytes received\n", len);
-
+                    
                   //Doe eens naar de nrf sturen
                   handle_tcp_rx(buffer);
                   /**********************************************/

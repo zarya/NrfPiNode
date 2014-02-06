@@ -7,3 +7,8 @@ struct payload_t
   uint8_t options;
 };
 
+struct __attribute__((packed)) input_msg{
+    uint16_t nodeid;
+    char header_type;
+    char payload[77];
+};
