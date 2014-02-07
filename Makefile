@@ -31,7 +31,7 @@ CCFLAGS=-mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -g
 
 # make all
 # reinstall the library after each recompilation
-all: librf24 install-rf24 librf24network install-rf24n main-controller
+all: librf24 install-rf24 librf24network install-rf24n NrfPiNode 
 
 # Make the library
 librf24network: RF24Network.o
@@ -72,7 +72,7 @@ RF24.o: RF24.cpp
 
 # clear build files
 clean:
-	rm -rf *.o ${LIB_RF24}.* ${LIB_RFN}.*
+	rm -rf *.o ${LIB_RF24}.* ${LIB_RFN}.* main-controller NrfPiNode
 
 # Install the library to LIBPATH
 .PHONY: install-rf24n install-rf24

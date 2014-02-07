@@ -12,3 +12,10 @@ struct __attribute__((packed)) input_msg{
     char header_type;
     char payload[77];
 };
+
+// OTA Config load payload
+struct config_payload_t
+{
+  uint8_t pos;
+  uint8_t data;
+};
