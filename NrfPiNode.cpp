@@ -70,6 +70,7 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
     }
     return dataupload;
 }
+
 //Handle radio output
 int handle_radio_tx(uint16_t nodeid, char header_type, char* payload)
 {
@@ -88,24 +89,45 @@ int is_valid_fd(int fd)
     return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
 }
 
+void send_to_socket(fd_set _working_set, int _max_sd, char client_payload[255]) {
+    int y;
+    for (y=0; y <= _max_sd; ++y)
+    {
+        if (FD_ISSET(y, &_working_set)) {
+            signal(SIGPIPE, SIG_IGN);
+            if (is_valid_fd(y))
+                send(y, client_payload, strlen(client_payload), 0);
+        }
+    }
+}
+
+
 //Handle the radio input
 void handle_radio(fd_set _working_set, int _max_sd) {
     network.update();
-    int y;
     while ( network.available() )
     {
         // If so, grab it and print it out
         RF24NetworkHeader header;
         network.peek(header);
         payload_t payload;
-        network.read(header,&payload,sizeof(payload));
         char* client_payload = new char[255];
+
+        uint32_t currenttime = (uint32_t)time(NULL);
+        uint32_t replytimestamp;
+
         switch ( header.type ) {
             case 'Q':
                 //Handle ping reply
-                printf("Received ping from %i\n",header.from_node);
+                network.read(header,&replytimestamp,4);
+                printf("Received ping from %i ttl: %lu sec.\n",header.from_node,currenttime-replytimestamp);
+                printf(client_payload,"Q %i %lus\n",header.from_node,currenttime-replytimestamp);
+                send_to_socket(_working_set, _max_sd,client_payload);
+                free(client_payload);
+                return;
                 break;
         };
+        network.read(header,&payload,sizeof(payload));
         switch ( payload.type ) {
             case 'T': //Process temperature
                 client_payload = handle_sensor_metric(header,payload,1);
@@ -119,22 +141,18 @@ void handle_radio(fd_set _working_set, int _max_sd) {
             case 'G': //Precess Gass
                 client_payload = handle_sensor_metric(header,payload,0);
                 break;
+            case 'A':
+                client_payload = handle_sensor_metric(header,payload,0);
+                break;
             default:
-                printf("Unknown payload type\n");
+                printf("Unknown payload type %c\n",payload.type);
                 return;
                 break;
         };
         //Send packet from nodes
         if (header.from_node != 0) {
             printf(client_payload);
-            for (y=0; y <= _max_sd; ++y)
-            {
-                if (FD_ISSET(y, &_working_set)) {
-                    signal(SIGPIPE, SIG_IGN);
-                    if (is_valid_fd(y))
-                        send(y, client_payload, strlen(client_payload), 0);
-                }
-            }
+            send_to_socket(_working_set, _max_sd,client_payload);
             send_payload(client_payload);
         }
         free(client_payload);
@@ -152,12 +170,14 @@ void handle_tcp_rx(char buffer[80])
     payload_t payload;
 
     char* configbuffer = new char[2];
+    uint32_t timestamp;
+    timestamp = (uint32_t)time(NULL);
 
     switch ( input_data.header_type )
     {
         case 'P':
             printf("Sending ping to %i\n",input_data.nodeid);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)1);
+            handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)timestamp);
             break;
         case 'C':
             printf("Sending configuration to node %i\n",input_data.nodeid);
