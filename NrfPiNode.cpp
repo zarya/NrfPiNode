@@ -63,10 +63,10 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
         value = (float)_value;
 
     if (payload.options == 1){
-        sprintf(dataupload,"sensor.net.%i.%c.%i -%.2f -1\n\r",
+        sprintf(dataupload,"sensor.net.%o.%c.%i -%.2f -1\n\r",
             header.from_node,payload.type,payload.sensor,value);
     } else {
-        sprintf(dataupload,"sensor.net.%i.%c.%i %.2f -1\n\r",
+        sprintf(dataupload,"sensor.net.%o.%c.%i %.2f -1\n\r",
             header.from_node,payload.type,payload.sensor,value);
     }
     return dataupload;
@@ -77,10 +77,10 @@ int handle_radio_tx(uint16_t nodeid, char header_type, char* payload)
 {
     RF24NetworkHeader header(nodeid, header_type);
     if (network.write(header,&payload,sizeof(payload))) {
-        printf("Command send to node: %i\n",nodeid);
+        printf("Command send to node: %o\n",nodeid);
         return 1;
     } else {
-        printf("Error sending to node: %i\n",nodeid);
+        printf("Error sending to node: %o\n",nodeid);
         return 0;
     }
 }
@@ -114,14 +114,14 @@ void handle_radio(fd_set _working_set, int _max_sd) {
         payload_t payload;
         char* client_payload = new char[255];
 
-        uint16_t replytimestamp;
+        uint16_t replystamp;
 
         switch ( header.type ) {
             case 'Q':
                 //Handle ping reply
-                network.read(header,&replytimestamp,2);
-                printf("Received ping reply from %i\n",header.from_node);
-                sprintf(client_payload,"Q %i %i\n",header.from_node,replytimestamp);
+                network.read(header,&replystamp,2);
+                printf("Received ping reply from %o\n",header.from_node);
+                sprintf(client_payload,"Q %o %i\n",header.from_node,replystamp);
                 send_to_socket(_working_set, _max_sd,client_payload);
                 free(client_payload);
                 return;
@@ -164,21 +164,21 @@ void handle_tcp_rx(char buffer[80])
 {
     input_msg input_data; 
     memcpy(&input_data, buffer, sizeof input_data);
-    printf("Sending message to\n\tNodeID: %i\n",input_data.nodeid);
+    printf("Sending message to\n\tNodeID: %o\n",input_data.nodeid);
     printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
 
     char* configbuffer = new char[2];
-    uint16_t timestamp;
+    uint16_t stamp;
 
     switch ( input_data.header_type )
     {
         case 'P':
-            memcpy(&timestamp,input_data.payload,2);
-            printf("Sending ping to %i stamp: %i\n",input_data.nodeid,timestamp);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)timestamp);
+            memcpy(&stamp,input_data.payload,2);
+            printf("Sending ping to %o stamp: %i\n",input_data.nodeid,stamp);
+            handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)stamp);
             break;
         case 'C':
-            printf("Sending configuration to node %i\n",input_data.nodeid);
+            printf("Sending configuration to node %o\n",input_data.nodeid);
             memcpy(&configbuffer,input_data.payload,2);
             handle_radio_tx(input_data.nodeid,input_data.header_type,configbuffer);
             break;
