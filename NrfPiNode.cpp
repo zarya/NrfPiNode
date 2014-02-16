@@ -12,6 +12,7 @@ extern "C" {
 #include <errno.h>
 #include <strings.h>
 #include <stdio.h>
+#include <inttypes.h>
 }
 
 #include "config.h"
@@ -113,15 +114,14 @@ void handle_radio(fd_set _working_set, int _max_sd) {
         payload_t payload;
         char* client_payload = new char[255];
 
-        uint32_t currenttime = (uint32_t)time(NULL);
-        uint32_t replytimestamp;
+        uint16_t replytimestamp;
 
         switch ( header.type ) {
             case 'Q':
                 //Handle ping reply
-                network.read(header,&replytimestamp,4);
-                printf("Received ping from %i ttl: %lu sec.\n",header.from_node,currenttime-replytimestamp);
-                printf(client_payload,"Q %i %lus\n",header.from_node,currenttime-replytimestamp);
+                network.read(header,&replytimestamp,2);
+                printf("Received ping reply from %i\n",header.from_node);
+                sprintf(client_payload,"Q %i %i\n",header.from_node,replytimestamp);
                 send_to_socket(_working_set, _max_sd,client_payload);
                 free(client_payload);
                 return;
@@ -167,16 +167,14 @@ void handle_tcp_rx(char buffer[80])
     printf("Sending message to\n\tNodeID: %i\n",input_data.nodeid);
     printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
 
-    payload_t payload;
-
     char* configbuffer = new char[2];
-    uint32_t timestamp;
-    timestamp = (uint32_t)time(NULL);
+    uint16_t timestamp;
 
     switch ( input_data.header_type )
     {
         case 'P':
-            printf("Sending ping to %i\n",input_data.nodeid);
+            memcpy(&timestamp,input_data.payload,2);
+            printf("Sending ping to %i stamp: %i\n",input_data.nodeid,timestamp);
             handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)timestamp);
             break;
         case 'C':
