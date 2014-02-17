@@ -168,6 +168,7 @@ void handle_tcp_rx(char buffer[80])
     printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
 
     char* configbuffer = new char[2];
+    char* pinoutputbuffer = new char[2];
     uint16_t stamp;
 
     switch ( input_data.header_type )
@@ -181,6 +182,11 @@ void handle_tcp_rx(char buffer[80])
             printf("Sending configuration to node %o\n",input_data.nodeid);
             memcpy(&configbuffer,input_data.payload,2);
             handle_radio_tx(input_data.nodeid,input_data.header_type,configbuffer);
+            break;
+        case 'O':
+            memcpy(&pinoutputbuffer,input_data.payload,2);
+            printf("Sending pin output to node: %o\n",input_data.nodeid);
+            handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer);
             break;
         default:
             printf("Unknown header type\n");
