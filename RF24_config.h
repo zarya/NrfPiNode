@@ -21,7 +21,7 @@
 #else 
 //#warning "Arduino disabled"
 #include "spi.h"
-#include "gpio.h"
+#include <bcm2835.h>
 #include "compatibility.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -89,14 +89,22 @@ typedef uint16_t prog_uint16_t;
 
 
 // Function, constant map as a result of migrating from Arduino
-#define LOW GPIO::OUTPUT_LOW
-#define HIGH GPIO::OUTPUT_HIGH
-#define INPUT GPIO::DIRECTION_IN
-#define OUTPUT GPIO::DIRECTION_OUT
-#define digitalWrite(pin, value) GPIO::write(pin, value)
-#define pinMode(pin, direction) GPIO::open(pin, direction)
-#define delay(milisec) __msleep(milisec)
-#define delayMicroseconds(usec) __usleep(usec)
+//#define LOW GPIO::OUTPUT_LOW
+//#define HIGH GPIO::OUTPUT_HIGH
+//#define INPUT GPIO::DIRECTION_IN
+//#define OUTPUT GPIO::DIRECTION_OUT
+//#define digitalWrite(pin, value) GPIO::write(pin, value)
+//#define pinMode(pin, direction) GPIO::open(pin, direction)
+
+#define INPUT BCM2835_GPIO_FSEL_INPT
+#define OUTPUT  BCM2835_GPIO_FSEL_OUTP
+#define digitalWrite(pin, value) bcm2835_gpio_write(pin, value)
+#define pinMode(pin, direction) bcm2835_gpio_fsel(pin, direction)
+
+//#define delay(milisec) __msleep(milisec)
+//#define delayMicroseconds(usec) __usleep(usec)
+
+
 
 //#endif
 

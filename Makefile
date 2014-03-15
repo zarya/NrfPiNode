@@ -50,13 +50,10 @@ ota-example: ota-example.cpp
 	g++ ${CCFLAGS} -Wall -lrf24 -lrf24network $^ PracticalSocket.cpp -o $@
 
 
-librf24: RF24.o gpio.o spi.o compatibility.o
-	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME_RF24} compatibility.o gpio.o spi.o RF24.o
+librf24: RF24.o spi.o compatibility.o
+	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME_RF24} compatibility.o spi.o RF24.o -lbcm2835
 
 # Library parts
-gpio.o: gpio.cpp
-	g++ -Wall -fPIC ${CCFLAGS} -c gpio.cpp
-
 spi.o: spi.cpp
 	g++ -Wall -fPIC ${CCFLAGS} -c spi.cpp
 
@@ -67,7 +64,7 @@ RF24Network.o: RF24Network.cpp
 	g++ -Wall -fPIC ${CCFLAGS} -c $^
 
 RF24.o: RF24.cpp
-	g++ -Wall -fPIC ${CCFLAGS} -c $^
+	g++ -Wall -fPIC ${CCFLAGS} -c $^ -lbcm2835
 
 
 # clear build files

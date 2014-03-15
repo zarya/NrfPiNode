@@ -348,6 +348,7 @@ void RF24::printDetails(void)
 void RF24::begin(void)
 {
   // Initialize pins
+  bcm2835_init();
   pinMode(ce_pin,OUTPUT);
 
 if ( spidevice == "/dev/spidev0.1" ) {

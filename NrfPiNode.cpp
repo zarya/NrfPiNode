@@ -269,12 +269,12 @@ int main (int argc, char *argv[])
    max_sd = listen_sd;
    FD_SET(listen_sd, &master_set);
 
-   timeout.tv_sec  = 0;
-   timeout.tv_usec = 0;
-
    do
    {
       memcpy(&working_set, &master_set, sizeof(master_set));
+
+      timeout.tv_sec  = 0;
+      timeout.tv_usec = 500;
 
       rc = select(max_sd + 1, &working_set, NULL, NULL, &timeout);
 

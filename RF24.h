@@ -16,7 +16,6 @@
 #define __RF24_H__
 
 #include "RF24_config.h"
-//#include "lib/RF24/compatibility.h"
 #include "compatibility.h"
 #include "spi.h"
 
