@@ -10,6 +10,9 @@ Based on the work of @stanleyseow and @maniacbug
 https://github.com/stanleyseow/RF24
 Please see the full documentation at http://maniacbug.github.com/RF24Network/index.html
 
+# Installation requirements
+* http://www.airspayce.com/mikem/bcm2835/
+
 # Features
 * Receive sensor metrics and put them in graphite
 
@@ -18,11 +21,5 @@ Please see the full documentation at http://maniacbug.github.com/RF24Network/ind
 * Ota config menu
 
 # Commands
-## main-controller
-This is the main controller the deamon that will do all the communication from and to the sensor network
-
-## ota-example
-This is a proof of concept to the the ota-config module
-
-## tx-test
-This tool sends a ping request to node 5 and waits for the reply 
+## NrfPiNode
+The main daemon
