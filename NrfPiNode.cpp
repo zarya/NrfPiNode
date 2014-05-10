@@ -57,8 +57,8 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
     char* dataupload = new char[255];
     float value;
     int16_t _value = (payload.value_high << 4) | payload.value_low;
-    if (devide)
-        value = (float)_value/100;
+    if (devide > 0)
+        value = (float)_value/devide;
     else
         value = (float)_value;
 
@@ -130,7 +130,7 @@ void handle_radio(fd_set _working_set, int _max_sd) {
         network.read(header,&payload,sizeof(payload));
         switch ( payload.type ) {
             case 'T': //Process temperature
-                client_payload = handle_sensor_metric(header,payload,1);
+                client_payload = handle_sensor_metric(header,payload,100);
                 break;
             case 'P': //Process Pulse
                 client_payload = handle_sensor_metric(header,payload,0);
@@ -138,16 +138,19 @@ void handle_radio(fd_set _working_set, int _max_sd) {
             case 'W': //Process Water
                 client_payload = handle_sensor_metric(header,payload,0);
                 break;
-            case 'G': //Precess Gass
+            case 'G': //Process Gass
                 client_payload = handle_sensor_metric(header,payload,0);
                 break;
-            case 'A':
+            case 'A': //Process Analog input
                 client_payload = handle_sensor_metric(header,payload,0);
                 break;
-            case 'H':
+            case 'H': //Process Humidity
                 client_payload = handle_sensor_metric(header,payload,0);
                 break;
-            default:
+            case 'B': //Process Battary voltage in V
+                client_payload = handle_sensor_metric(header,payload,100);
+                break;
+           default:
                 printf("Unknown payload type %c\n",payload.type);
                 return;
                 break;
