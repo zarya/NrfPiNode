@@ -25,7 +25,8 @@ extern "C" {
 
 using namespace std;
 
-RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CSN
+RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CE 
+
 RF24Network network(radio);
 
 #define SERVER_PORT  12345
@@ -149,6 +150,9 @@ void handle_radio(fd_set _working_set, int _max_sd) {
                 break;
             case 'B': //Process Battary voltage in V
                 client_payload = handle_sensor_metric(header,payload,100);
+                break;
+            case 'D': //Process Presure sensor
+                client_payload = handle_sensor_metric(header,payload,0);
                 break;
            default:
                 printf("Unknown payload type %c\n",payload.type);
