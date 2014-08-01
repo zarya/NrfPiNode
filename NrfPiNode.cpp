@@ -46,8 +46,6 @@ void send_payload(char *payload)
 
 void radio_setup() {
     radio.begin();
-    radio.setDataRate(RF24_250KBPS);
-    radio.setRetries(7,7);
     delay(5);
     network.begin(CHANNEL, NODEID);
 }
