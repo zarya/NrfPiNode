@@ -72,11 +72,11 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
 }
 
 //Handle radio output
-int handle_radio_tx(uint16_t nodeid, char header_type, char payload[22], size_t len)
+int handle_radio_tx(uint16_t nodeid, char header_type, char payload[20], size_t len)
 {
     RF24NetworkHeader header(nodeid, header_type);
     if (network.write(header,&payload,len)) {
-        printf("Command send to node: %o\n",nodeid);
+        printf("Command send to node: %o len: %i\n",nodeid,len);
         return 1;
     } else {
         printf("Error sending to node: %o\n",nodeid);
@@ -168,23 +168,24 @@ void handle_radio(fd_set _working_set, int _max_sd) {
 }
 
 //Handle incomming packet from tcp socket
-void handle_tcp_rx(char buffer[80])
+void handle_tcp_rx(char buffer[82])
 {
     input_msg input_data; 
     memcpy(&input_data, buffer, sizeof input_data);
     printf("Sending message to\n\tNodeID: %o\n",input_data.nodeid);
     printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
+    printf("\tPayload size: %i\n",sizeof(input_data.payload));
 
     char* configbuffer = new char[2];
     char* pinoutputbuffer = new char[2];
-    char* ws2801buffer = new char[8];
-    uint16_t stamp;
+    char* ws2801buffer = new char[4];
+    char* stamp = new char[2];
 
     switch ( input_data.header_type )
     {
         case 'P':
             memcpy(&stamp,input_data.payload,sizeof(stamp));
-            printf("Sending ping to %o stamp: %i\n",input_data.nodeid,stamp);
+            printf("Sending ping to %o stamp: %s\n",input_data.nodeid,stamp);
             handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)stamp,sizeof(stamp));
             break;
         case 'C':
@@ -198,9 +199,9 @@ void handle_tcp_rx(char buffer[80])
             handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
             break;
         case 'W':
-            memcpy(&ws2801buffer,input_data.payload,sizeof(ws2801buffer));
+            memcpy(&ws2801buffer,input_data.payload,4);
+            handle_radio_tx(input_data.nodeid,input_data.header_type,ws2801buffer,4);
             printf("Sending ws2801 output to node: %o\n",input_data.nodeid);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,ws2801buffer,sizeof(ws2801buffer));
             break;
         default:
             printf("Unknown header type\n");
