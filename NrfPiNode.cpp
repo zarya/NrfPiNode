@@ -36,6 +36,13 @@ RF24Network network(radio);
 #define TRUE             1
 #define FALSE            0
 
+void print_hex(const char *s, size_t len)
+{
+  for (size_t i = 0; i < len; ++i)
+    printf("0x%02x ", (unsigned int) *s++);
+  printf("\n");
+}
+
 void send_payload(char *payload)
 {
   try {
@@ -173,16 +180,20 @@ void handle_radio(fd_set _working_set, int _max_sd) {
 //Handle incomming packet from tcp socket
 void handle_tcp_rx(char buffer[80], int buffer_len)
 {
+    if (buffer_len < 4)
+        return;
     input_msg input_data; 
     memcpy(&input_data, buffer, buffer_len);
     printf("Sending message to\n\tNodeID: %o\n",input_data.nodeid);
     printf("\tHeader type %c\n",input_data.header_type);
     printf("\tBuffer len: %i\n",buffer_len);
     printf("\tPayload len: %i\n",buffer_len-3);
+    printf("\tPayload: ");
+    print_hex(input_data.payload,buffer_len-3);
     char* configbuffer = new char[2];
     char* pinoutputbuffer = new char[2];
     int* ws2801buffer = new int[5]; 
-    int ws2801buffer_len = 5; 
+    size_t ws2801buffer_len = 5; 
     char* stamp = new char[2];
 
     switch ( input_data.header_type )
@@ -211,7 +222,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
             printf("Unknown header type\n");
             break;
     }
-    memset(input_data, 0, sizeof(input_data));
+    memset(&input_data, 0, sizeof(input_data));
 }
 
 int main (int argc, char *argv[])
