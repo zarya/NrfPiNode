@@ -2,30 +2,32 @@
 #include <iostream>
 #include <ctime>
 extern "C" {
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <strings.h>
-#include <stdio.h>
-#include <inttypes.h>
+    #include <signal.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <sys/ioctl.h>
+    #include <sys/socket.h>
+    #include <sys/time.h>
+    #include <netinet/in.h>
+    #include <errno.h>
+    #include <strings.h>
+    #include <stdio.h>
+    #include <inttypes.h>
+    #include <fcntl.h>
 }
 
 #include "config.h"
 #include "PracticalSocket.h"
 
-#include "RF24.h"
-#include "RF24Network.h"
+#include "../RF24/RF24.h"
+#include "../RF24Network/RF24Network.h"
 
 #include "NrfPiNode.h"
 
 using namespace std;
 
-RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CE 
+// CE Pin, CSN Pin, SPI Speed
+RF24 radio(RPI_V2_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_4MHZ);
 
 RF24Network network(radio);
 
@@ -49,6 +51,7 @@ void radio_setup() {
     radio.begin();
     delay(5);
     network.begin(CHANNEL, NODEID);
+    radio.printDetails();
 }
 
 char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devide)
@@ -72,7 +75,7 @@ char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devi
 }
 
 //Handle radio output
-int handle_radio_tx(uint16_t nodeid, char header_type, char payload[20], size_t len)
+int handle_radio_tx(uint16_t nodeid, char header_type, const void* payload, size_t len)
 {
     RF24NetworkHeader header(nodeid, header_type);
     if (network.write(header,&payload,len)) {
@@ -168,24 +171,25 @@ void handle_radio(fd_set _working_set, int _max_sd) {
 }
 
 //Handle incomming packet from tcp socket
-void handle_tcp_rx(char buffer[82])
+void handle_tcp_rx(char buffer[80], int buffer_len)
 {
     input_msg input_data; 
     memcpy(&input_data, buffer, sizeof input_data);
     printf("Sending message to\n\tNodeID: %o\n",input_data.nodeid);
-    printf("\tHeader type %c\n\tPayload: %s\n",input_data.header_type,input_data.payload);
-    printf("\tPayload size: %i\n",sizeof(input_data.payload));
-
+    printf("\tHeader type %c\n",input_data.header_type);
+    printf("\tBuffer len: %i\n",buffer_len);
+    printf("\tPayload len: %i\n",buffer_len-3);
     char* configbuffer = new char[2];
     char* pinoutputbuffer = new char[2];
-    char* ws2801buffer = new char[4];
+    int* ws2801buffer = new int[5]; 
+    int ws2801buffer_len = 5; 
     char* stamp = new char[2];
 
     switch ( input_data.header_type )
     {
         case 'P':
             memcpy(&stamp,input_data.payload,sizeof(stamp));
-            printf("Sending ping to %o stamp: %s\n",input_data.nodeid,stamp);
+            printf("Sending ping to %o\n",input_data.nodeid);
             handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)stamp,sizeof(stamp));
             break;
         case 'C':
@@ -199,18 +203,17 @@ void handle_tcp_rx(char buffer[82])
             handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
             break;
         case 'W':
-            memcpy(&ws2801buffer,input_data.payload,4);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,ws2801buffer,4);
-            printf("Sending ws2801 output to node: %o\n",input_data.nodeid);
+//            ws2801_payload_t ws_payload;
+//            memcpy(&ws_payload,input_data.payload,5);
+            memcpy(&ws2801buffer,input_data.payload,ws2801buffer_len);
+            printf("Sending ws2801 output to node: %o len: %i\n",input_data.nodeid,ws2801buffer_len);
+            handle_radio_tx(input_data.nodeid,input_data.header_type,ws2801buffer,ws2801buffer_len);
+            //handle_radio_tx(input_data.nodeid,input_data.header_type,&ws_payload,ws2801buffer_len);
             break;
         default:
             printf("Unknown header type\n");
             break;
     }
-    //payload_t input_payload;
-    //memcpy(&input_payload, input_data.payload, sizeof(input_data.payload));
-    
-    //handle_radio_tx(uint16_t nodeid, char header_type, payload_t payload)
 }
 
 int main (int argc, char *argv[])
@@ -347,7 +350,8 @@ int main (int argc, char *argv[])
                   len = rc;
                   printf("  %d bytes received\n", len);
                     
-                  handle_tcp_rx(buffer);
+                  handle_tcp_rx(buffer,len);
+                  memset(&buffer[0], 0, sizeof(buffer));
                   break;
 
                } while (TRUE);

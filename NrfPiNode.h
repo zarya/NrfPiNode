@@ -10,7 +10,7 @@ struct payload_t
 struct __attribute__((packed)) input_msg{
     uint16_t nodeid;
     char header_type;
-    char payload[79];
+    char payload[77];
 };
 
 // OTA Config load payload
@@ -21,11 +21,9 @@ struct config_payload_t
 };
 
 
-struct ws2801_payload_t
+struct __attribute__((packed)) ws2801_payload_t
 {
-  uint8_t func;
-  uint8_t l_led;
-  uint8_t h_led;
+  uint8_t led;
   uint8_t r;
   uint8_t g;
   uint8_t b;
