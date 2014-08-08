@@ -192,7 +192,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     print_hex(input_data.payload,buffer_len-3);
     char* configbuffer = new char[2];
     char* pinoutputbuffer = new char[2];
-    int* ws2801buffer = new int[5]; 
+    char* ws2801buffer = new char[5]; 
     size_t ws2801buffer_len = 5; 
     char* stamp = new char[2];
 
