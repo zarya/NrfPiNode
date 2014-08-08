@@ -211,6 +211,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
             printf("Unknown header type\n");
             break;
     }
+    memset(input_data, 0, sizeof(input_data));
 }
 
 int main (int argc, char *argv[])
