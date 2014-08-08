@@ -27,7 +27,7 @@ extern "C" {
 using namespace std;
 
 // CE Pin, CSN Pin, SPI Speed
-RF24 radio(RPI_V2_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_4MHZ);
+RF24 radio(RPI_V2_GPIO_P1_22, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_8MHZ);
 
 RF24Network network(radio);
 
@@ -174,7 +174,7 @@ void handle_radio(fd_set _working_set, int _max_sd) {
 void handle_tcp_rx(char buffer[80], int buffer_len)
 {
     input_msg input_data; 
-    memcpy(&input_data, buffer, sizeof input_data);
+    memcpy(&input_data, buffer, buffer_len);
     printf("Sending message to\n\tNodeID: %o\n",input_data.nodeid);
     printf("\tHeader type %c\n",input_data.header_type);
     printf("\tBuffer len: %i\n",buffer_len);
@@ -203,12 +203,9 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
             handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
             break;
         case 'W':
-//            ws2801_payload_t ws_payload;
-//            memcpy(&ws_payload,input_data.payload,5);
             memcpy(&ws2801buffer,input_data.payload,ws2801buffer_len);
             printf("Sending ws2801 output to node: %o len: %i\n",input_data.nodeid,ws2801buffer_len);
             handle_radio_tx(input_data.nodeid,input_data.header_type,ws2801buffer,ws2801buffer_len);
-            //handle_radio_tx(input_data.nodeid,input_data.header_type,&ws_payload,ws2801buffer_len);
             break;
         default:
             printf("Unknown header type\n");
