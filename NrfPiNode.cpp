@@ -19,8 +19,8 @@ extern "C" {
 #include "config.h"
 #include "PracticalSocket.h"
 
-#include "../RF24/RF24.h"
-#include "../RF24Network/RF24Network.h"
+#include "libs/RF24/RF24.h"
+#include "libs/RF24Network/RF24Network.h"
 
 #include "NrfPiNode.h"
 

@@ -12,7 +12,7 @@ SOURCES = ${PROGRAMS:=.cpp}
 all: ${PROGRAMS}
 
 ${PROGRAMS}: ${SOURCES}
-	g++ ${CCFLAGS} -Wall -I../RF24Network -I../RF24 -lrf24-bcm -lrf24network $@.cpp PracticalSocket.cpp -o $@
+	g++ ${CCFLAGS} -Wall -Ilibs/RF24Network -Ilibs/RF24 -lrf24-bcm -lrf24network $@.cpp PracticalSocket.cpp -o $@
 
 clean:
 	rm -rf $(PROGRAMS)
