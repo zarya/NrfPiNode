@@ -1,24 +1,19 @@
 # NrfPiNode 
 
-NrfPiNode that makes use of the RF24Network lib and runs on a raspberry pi
+NrfPiNode that makes use of the RF24Network and RF24 lib and runs on a raspberry pi
 
-The lib is build against the RF24 lib using the GPIO way
-
-Based on the works of https://github.com/farconada/RF24Network
-
-Based on the work of @stanleyseow and @maniacbug
-https://github.com/stanleyseow/RF24
-Please see the full documentation at http://maniacbug.github.com/RF24Network/index.html
-
-# Installation requirements
-* http://www.airspayce.com/mikem/bcm2835/
+# Install
+* run ./install.sh
+* edit config.h to your graphite host
+* make
+* ./NrfPiNode
 
 # Features
 * Receive sensor metrics and put them in graphite
+* Ability to send commands to nodes
+* Send configuration to the nodes over the air (OTA)
 
 ## Wishlist
-* Ability to send commands to the nodes from the main-controller
-* Ota config menu
 
 # Commands
 ## NrfPiNode
