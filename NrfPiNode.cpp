@@ -218,7 +218,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
 //    char* pinoutputbuffer = new char[2];
 //    char* stamp = new char[2];
 //    const void* outbuf = new void[20]; 
-    const char* outbuf = new char[20];
+    char* outbuf = new char[20];
     size_t outbuf_len = 0;
     if(outbuf == NULL) {
         printf("buffer allocation error\n");
@@ -254,10 +254,10 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
             return;
             break;
     }
-    memcpy(&outbuf,input_data.payload,outbuf_len);
+    memcpy(outbuf,input_data.payload,outbuf_len);
     printf("Radio payload: \n");
-    hexout(&outbuf,outbuf_len);
-    if (network.write(header,&outbuf,outbuf_len))
+    hexout(outbuf,outbuf_len);
+    if (network.write(header,outbuf,outbuf_len))
     {
         printf("Command send to node: %o len: %i\n",input_data.nodeid,outbuf_len);
     } else {
