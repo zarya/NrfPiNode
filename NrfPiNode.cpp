@@ -214,10 +214,6 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     printf("\tHeader type %c\n",input_data.header_type);
     printf("\tBuffer len: %i\n",buffer_len);
     printf("\tPayload len: %i\n",buffer_len-3);
-//    char* configbuffer = new char[2];
-//    char* pinoutputbuffer = new char[2];
-//    char* stamp = new char[2];
-//    const void* outbuf = new void[20]; 
     char* outbuf = new char[20];
     size_t outbuf_len = 0;
     if(outbuf == NULL) {
@@ -245,7 +241,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
             //handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
             break;
         case 'W':
-            outbuf_len = 5;
+            outbuf_len = 6;
             printf("Sending ws2801 output to node: %o\n",input_data.nodeid);
             //memcpy(&outbuf,input_data.payload,outbuf_len);
             break;
