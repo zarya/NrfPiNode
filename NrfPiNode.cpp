@@ -36,13 +36,38 @@ RF24Network network(radio);
 #define TRUE             1
 #define FALSE            0
 
-void print_hex(const char *s, size_t len)
-{
-  for (size_t i = 0; i < len; ++i)
-    printf("0x%02x ", (unsigned int) *s++);
-  printf("\n");
+//! returns the hex char that corresponds to @a c, which should be 0-16 (returns '.' otherwise)
+inline char hexdigit(int c) {
+    if(c<0)
+        return '.';
+    if(c<10)
+        return '0'+c;
+    if(c<16)
+        return 'a'+(c-10);
+    return ',';
 }
 
+//! printf's the two hex digits coresponding to a byte
+inline void charhexout(char c) {
+    printf("%c%c",hexdigit((c>>4)&0x0F),hexdigit(c&0x0F));
+}
+
+//! charhexout's @a n bytes starting at @a p
+inline void hexout(const void* p, size_t n) {
+    printf("%p:\n",p);
+    const char* x=(const char*)p;
+    for(unsigned int i=0; i<n;) {
+        printf("%6d ",i);
+        for(unsigned int k=0; k<8 && i<n; k++) {
+            for(unsigned int j=0; j<4 && i<n; j++, i++) {
+                charhexout(x[i]);
+                //              std::cout << flush;
+            }
+            printf(" ");
+        }
+        printf("\n");
+    }
+}
 void send_payload(char *payload)
 {
   try {
@@ -184,43 +209,55 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
         return;
     input_msg input_data; 
     memcpy(&input_data, buffer, buffer_len);
+    RF24NetworkHeader header(input_data.nodeid, input_data.header_type);
     printf("Sending message to\n\tNodeID: %o\n",input_data.nodeid);
     printf("\tHeader type %c\n",input_data.header_type);
     printf("\tBuffer len: %i\n",buffer_len);
     printf("\tPayload len: %i\n",buffer_len-3);
-    printf("\tPayload: ");
-    print_hex(input_data.payload,buffer_len-3);
-    char* configbuffer = new char[2];
-    char* pinoutputbuffer = new char[2];
-    char* ws2801buffer = new char[5]; 
-    size_t ws2801buffer_len = 5; 
-    char* stamp = new char[2];
+//    char* configbuffer = new char[2];
+//    char* pinoutputbuffer = new char[2];
+//    char* stamp = new char[2];
+    const void* outbuf = malloc(20);
+    size_t outbuf_len = 0;
 
     switch ( input_data.header_type )
     {
         case 'P':
-            memcpy(&stamp,input_data.payload,sizeof(stamp));
+            outbuf_len = 2;
             printf("Sending ping to %o\n",input_data.nodeid);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)stamp,sizeof(stamp));
+            //memcpy(&stamp,input_data.payload,sizeof(stamp));
+            //handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)stamp,sizeof(stamp));
             break;
         case 'C':
+            outbuf_len = 2;
             printf("Sending configuration to node %o\n",input_data.nodeid);
-            memcpy(&configbuffer,input_data.payload,sizeof(configbuffer));
-            handle_radio_tx(input_data.nodeid,input_data.header_type,configbuffer,sizeof(configbuffer));
+            //memcpy(&configbuffer,input_data.payload,sizeof(configbuffer));
+            //handle_radio_tx(input_data.nodeid,input_data.header_type,configbuffer,sizeof(configbuffer));
             break;
         case 'O':
-            memcpy(&pinoutputbuffer,input_data.payload,sizeof(pinoutputbuffer));
+            outbuf_len = 2;
             printf("Sending pin output to node: %o\n",input_data.nodeid);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
+            //memcpy(&pinoutputbuffer,input_data.payload,sizeof(pinoutputbuffer));
+            //handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
             break;
         case 'W':
-            memcpy(&ws2801buffer,input_data.payload,ws2801buffer_len);
-            printf("Sending ws2801 output to node: %o len: %i\n",input_data.nodeid,ws2801buffer_len);
-            handle_radio_tx(input_data.nodeid,input_data.header_type,ws2801buffer,ws2801buffer_len);
+            outbuf_len = 5;
+            printf("Sending ws2801 output to node: %o\n",input_data.nodeid);
+            //memcpy(&outbuf,input_data.payload,outbuf_len);
             break;
         default:
             printf("Unknown header type\n");
+            return;
             break;
+    }
+    memcpy(&outbuf,input_data.payload,outbuf_len);
+    printf("Radio payload: \n");
+    hexout(&outbuf,outbuf_len);
+    if (network.write(header,&outbuf,outbuf_len))
+    {
+        printf("Command send to node: %o len: %i\n",input_data.nodeid,outbuf_len);
+    } else {
+        printf("Error sending to node: %o\n",input_data.nodeid);
     }
     memset(&input_data, 0, sizeof(input_data));
 }
