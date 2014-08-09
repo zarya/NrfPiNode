@@ -217,9 +217,13 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
 //    char* configbuffer = new char[2];
 //    char* pinoutputbuffer = new char[2];
 //    char* stamp = new char[2];
-    const void* outbuf = malloc(20);
+//    const void* outbuf = new void[20]; 
+    const char* outbuf = new char[20];
     size_t outbuf_len = 0;
-
+    if(outbuf == NULL) {
+        printf("buffer allocation error\n");
+        return;
+    }
     switch ( input_data.header_type )
     {
         case 'P':
