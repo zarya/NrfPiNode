@@ -36,6 +36,18 @@ RF24Network network(radio);
 #define TRUE             1
 #define FALSE            0
 
+float n2f(unsigned char b0, unsigned char b1, unsigned char b2, unsigned char b3) {
+    union {
+        float f;
+        unsigned char b[4];
+    } u;
+    u.b[0] = b0;
+    u.b[1] = b1;
+    u.b[2] = b2;
+    u.b[3] = b3;
+    return u.f;
+}
+
 //! returns the hex char that corresponds to @a c, which should be 0-16 (returns '.' otherwise)
 inline char hexdigit(int c) {
     if(c<0)
@@ -86,23 +98,12 @@ void radio_setup() {
     radio.printDetails();
 }
 
-char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload, int devide)
+char* handle_sensor_metric(RF24NetworkHeader header, payload_t payload)
 {
     char* dataupload = new char[255];
-    float value;
-    int16_t _value = (payload.value_high << 4) | payload.value_low;
-    if (devide > 0)
-        value = (float)_value/devide;
-    else
-        value = (float)_value;
 
-    if (payload.options == 1){
-        sprintf(dataupload,"sensor.net.%o.%c.%i -%.2f -1\n\r",
-            header.from_node,payload.type,payload.sensor,value);
-    } else {
-        sprintf(dataupload,"sensor.net.%o.%c.%i %.2f -1\n\r",
-            header.from_node,payload.type,payload.sensor,value);
-    }
+    sprintf(dataupload,"sensor.net.%o.%c.%i %.2f -1\n\r",
+        header.from_node,payload.type,payload.sensor,payload.value);
     return dataupload;
 }
 
@@ -145,9 +146,9 @@ void handle_radio(fd_set _working_set, int _max_sd) {
         // If so, grab it and print it out
         RF24NetworkHeader header;
         network.peek(header);
-        payload_t payload;
         char* client_payload = new char[255];
-
+        payload_t payload;
+        float value;
         uint16_t replystamp;
 
         switch ( header.type ) {
@@ -161,33 +162,36 @@ void handle_radio(fd_set _working_set, int _max_sd) {
                 return;
                 break;
         };
+
         network.read(header,&payload,sizeof(payload));
+        value = n2f(payload.b0, payload.b1, payload.b2, payload.b3);
+        payload.value = value;
         switch ( payload.type ) {
             case 'T': //Process temperature
-                client_payload = handle_sensor_metric(header,payload,100);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'P': //Process Pulse
-                client_payload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'W': //Process Water
-                client_payload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'G': //Process Gass
-                client_payload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'A': //Process Analog input
-                client_payload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'H': //Process Humidity
-                client_payload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'B': //Process Battary voltage in V
-                client_payload = handle_sensor_metric(header,payload,100);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
             case 'D': //Process Presure sensor
-                client_payload = handle_sensor_metric(header,payload,0);
+                client_payload = handle_sensor_metric(header,payload);
                 break;
-           default:
+            default:
                 printf("Unknown payload type %c\n",payload.type);
                 return;
                 break;
@@ -225,25 +229,18 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
         case 'P':
             outbuf_len = 2;
             printf("Sending ping to %o\n",input_data.nodeid);
-            //memcpy(&stamp,input_data.payload,sizeof(stamp));
-            //handle_radio_tx(input_data.nodeid,input_data.header_type,(char*)stamp,sizeof(stamp));
             break;
         case 'C':
             outbuf_len = 2;
             printf("Sending configuration to node %o\n",input_data.nodeid);
-            //memcpy(&configbuffer,input_data.payload,sizeof(configbuffer));
-            //handle_radio_tx(input_data.nodeid,input_data.header_type,configbuffer,sizeof(configbuffer));
             break;
         case 'O':
             outbuf_len = 2;
             printf("Sending pin output to node: %o\n",input_data.nodeid);
-            //memcpy(&pinoutputbuffer,input_data.payload,sizeof(pinoutputbuffer));
-            //handle_radio_tx(input_data.nodeid,input_data.header_type,pinoutputbuffer,sizeof(pinoutputbuffer));
             break;
         case 'W':
             outbuf_len = 6;
             printf("Sending ws2801 output to node: %o\n",input_data.nodeid);
-            //memcpy(&outbuf,input_data.payload,outbuf_len);
             break;
         default:
             printf("Unknown header type\n");
@@ -259,6 +256,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     } else {
         printf("Error sending to node: %o\n",input_data.nodeid);
     }
+    free(outbuf);
     memset(&input_data, 0, sizeof(input_data));
 }
 

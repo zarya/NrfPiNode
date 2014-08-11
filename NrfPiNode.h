@@ -2,9 +2,11 @@ struct payload_t
 {
   char type;
   uint8_t sensor;
-  uint8_t value_high;
-  uint8_t value_low;
-  uint8_t options;
+  unsigned char b0;
+  unsigned char b1;
+  unsigned char b2;
+  unsigned char b3;
+  float value; 
 };
 
 struct __attribute__((packed)) input_msg{
