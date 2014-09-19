@@ -141,31 +141,33 @@ void send_to_socket(fd_set _working_set, int _max_sd, char client_payload[255]) 
 //Handle the radio input
 void handle_radio(fd_set _working_set, int _max_sd) {
     network.update();
-    while ( network.available() )
+    
+    while(network.available())
     {
         // If so, grab it and print it out
         RF24NetworkHeader header;
         network.peek(header);
-        char* client_payload = new char[255];
         payload_t payload;
         float value;
         uint16_t replystamp;
 
         switch ( header.type ) {
-            case 'Q':
+            case 'Q': {
+                char* client_payload = new char[255];
                 //Handle ping reply
                 network.read(header,&replystamp,2);
                 printf("Received ping reply from %o\n",header.from_node);
                 sprintf(client_payload,"Q %o %i\n",header.from_node,replystamp);
                 send_to_socket(_working_set, _max_sd,client_payload);
                 delete [] client_payload;
-                return;
-                break;
+            }
+            return;
         };
 
         network.read(header,&payload,sizeof(payload));
         value = n2f(payload.b0, payload.b1, payload.b2, payload.b3);
         payload.value = value;
+        char* client_payload = NULL;
         switch ( payload.type ) {
             case 'T': //Process temperature
                 client_payload = handle_sensor_metric(header,payload);
@@ -193,16 +195,15 @@ void handle_radio(fd_set _working_set, int _max_sd) {
                 break;
             default:
                 printf("Unknown payload type %c\n",payload.type);
-                delete [] client_payload;
                 return;
-                break;
         };
         //Send packet from nodes
-        if (header.from_node != 0) {
+        if (header.from_node != 0 && client_payload) {
             printf(client_payload);
             send_to_socket(_working_set, _max_sd,client_payload);
             send_payload(client_payload);
         }
+        
         delete [] client_payload;
     }
 }
@@ -257,7 +258,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     } else {
         printf("Error sending to node: %o\n",input_data.nodeid);
     }
-    delete [] outbuf;
+    free(outbuf);
     memset(&input_data, 0, sizeof(input_data));
 }
 
