@@ -158,7 +158,7 @@ void handle_radio(fd_set _working_set, int _max_sd) {
                 printf("Received ping reply from %o\n",header.from_node);
                 sprintf(client_payload,"Q %o %i\n",header.from_node,replystamp);
                 send_to_socket(_working_set, _max_sd,client_payload);
-                free(client_payload);
+                delete [] client_payload;
                 return;
                 break;
         };
@@ -193,6 +193,7 @@ void handle_radio(fd_set _working_set, int _max_sd) {
                 break;
             default:
                 printf("Unknown payload type %c\n",payload.type);
+                delete [] client_payload;
                 return;
                 break;
         };
@@ -202,7 +203,7 @@ void handle_radio(fd_set _working_set, int _max_sd) {
             send_to_socket(_working_set, _max_sd,client_payload);
             send_payload(client_payload);
         }
-        free(client_payload);
+        delete [] client_payload;
     }
 }
 
@@ -256,7 +257,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     } else {
         printf("Error sending to node: %o\n",input_data.nodeid);
     }
-    free(outbuf);
+    delete [] outbuf;
     memset(&input_data, 0, sizeof(input_data));
 }
 
