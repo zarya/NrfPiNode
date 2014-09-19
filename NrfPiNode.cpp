@@ -224,6 +224,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     size_t outbuf_len = 0;
     if(outbuf == NULL) {
         printf("buffer allocation error\n");
+        delete [] outbuf;
         return;
     }
     switch ( input_data.header_type )
@@ -258,7 +259,7 @@ void handle_tcp_rx(char buffer[80], int buffer_len)
     } else {
         printf("Error sending to node: %o\n",input_data.nodeid);
     }
-    free(outbuf);
+    delete [] outbuf;
     memset(&input_data, 0, sizeof(input_data));
 }
 
